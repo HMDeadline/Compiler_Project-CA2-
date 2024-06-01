@@ -1,0 +1,25 @@
+def func3()
+    return "give me string?";
+end
+
+def main()
+    a = 1;
+    b = "string";
+    c = [1, 2, 3, 4];
+
+    e1 = b + c[1];
+    for num in a
+        puts(num);
+    end
+    chop(a);
+    chop(b[1]);
+    for i in (1..10)
+        puts(i);
+    end
+    for i in (1.5..c)
+        puts(i);
+    end
+    "can you " << func3();
+    [1, 2, 3] << func3();
+    func3() << a;
+end
