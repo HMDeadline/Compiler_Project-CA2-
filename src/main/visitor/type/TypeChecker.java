@@ -57,7 +57,7 @@ public class TypeChecker extends Visitor<Type> {
         }catch (ItemNotFound ignored){}
         Type return_type = new NoType();
         for(Statement statement : functionDeclaration.getBody()) {
-            if(statement instanceof ReturnStatement){
+            if (statement instanceof ReturnStatement) {
                 return_type = statement.accept(this);
                 continue;
             }
@@ -173,6 +173,31 @@ public class TypeChecker extends Visitor<Type> {
         else{
             VarItem newVarItem = new VarItem(assignStatement.getAssignedId());
             // TODO:maybe new type for a variable
+            Type exp_type = assignStatement.getAssignExpression().accept(this);
+            AssignOperator op = assignStatement.getAssignOperator();
+            if (op == AssignOperator.ASSIGN){
+                newVarItem.setType(exp_type);
+            }
+            else{
+                try{
+                    VarItem var_item = (VarItem) SymbolTable.top.getItem(VarItem.START_KEY + assignStatement.getAssignedId().getName());
+                    Type var_type = var_item.getType();
+                    if (var_type.sameType(exp_type)){
+                        newVarItem.setType(var_type);
+                    }
+                    else if (var_type instanceof IntType && exp_type instanceof FloatType){
+                        newVarItem.setType(exp_type);
+                    }
+                    else if (var_type instanceof FloatType && exp_type instanceof IntType){
+                        newVarItem.setType(var_type);
+                    }
+                    else{
+                        typeErrors.add(new UnsupportedOperandType(assignStatement.getLine(), assignStatement.toString()));
+                        return new NoType();
+                    }
+                }
+                catch (ItemNotFound ignored){}
+            }
             try {
                 SymbolTable.top.put(newVarItem);
             }catch (ItemAlreadyExists ignored){}
@@ -286,6 +311,7 @@ public class TypeChecker extends Visitor<Type> {
     @Override
     public Type visit(RangeExpression rangeExpression){
         RangeType rangeType = rangeExpression.getRangeType();
+
         if(rangeType.equals(RangeType.LIST)){
             // TODO --> mind that the lists are declared explicitly in the grammar in this node, so handle the errors
         }
