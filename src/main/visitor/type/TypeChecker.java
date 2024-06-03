@@ -55,12 +55,17 @@ public class TypeChecker extends Visitor<Type> {
                 }catch (ItemAlreadyExists ignored){}
             }
         }catch (ItemNotFound ignored){}
-        for(Statement statement : functionDeclaration.getBody())
+        Type return_type = new NoType();
+        for(Statement statement : functionDeclaration.getBody()) {
+            if(statement instanceof ReturnStatement){
+                return_type = statement.accept(this);
+                continue;
+            }
             statement.accept(this);
-
+        }
         //TODO:Figure out whether return types of functions are not the same.
         SymbolTable.pop();
-        return null;
+        return return_type;
         //TODO:Return the inferred type of the function
     }
     @Override
@@ -91,6 +96,9 @@ public class TypeChecker extends Visitor<Type> {
     @Override
     public Type visit(MainDeclaration mainDeclaration){
         //TODO:visit main
+        SymbolTable.push(new SymbolTable());
+        for (Statement statement : mainDeclaration.getBody())
+            statement.accept(this);
         return null;
     }
     @Override
@@ -111,8 +119,11 @@ public class TypeChecker extends Visitor<Type> {
 
     @Override
     public Type visit(ReturnStatement returnStatement){
+        if(!returnStatement.hasRetExpression()) {
+            return returnStatement.getReturnExp().accept(this);
+        }
         // TODO:Visit return statement.Note that return type of functions are specified here
-        return null;
+        return new NoType();
     }
     @Override
     public Type visit(ExpressionStatement expressionStatement){
@@ -275,7 +286,6 @@ public class TypeChecker extends Visitor<Type> {
     @Override
     public Type visit(RangeExpression rangeExpression){
         RangeType rangeType = rangeExpression.getRangeType();
-
         if(rangeType.equals(RangeType.LIST)){
             // TODO --> mind that the lists are declared explicitly in the grammar in this node, so handle the errors
         }
