@@ -16,6 +16,7 @@ import main.symbolTable.exceptions.*;
 import main.symbolTable.item.*;
 import main.visitor.Visitor;
 
+import javax.swing.text.Element;
 import java.util.*;
 
 public class TypeChecker extends Visitor<Type> {
@@ -169,6 +170,23 @@ public class TypeChecker extends Visitor<Type> {
     public Type visit(AssignStatement assignStatement){
         if(assignStatement.isAccessList()){
             // TODO:assignment to list
+            Type index = assignStatement.getAccessListExpression().accept(this);
+            if (!(index instanceof IntType)){
+                typeErrors.add(new AccessIndexIsNotInt(assignStatement.getLine()));
+                return new NoType();
+            }
+            Type exp_type = assignStatement.getAssignExpression().accept(this);
+            try{
+                Type var_type = ((VarItem) SymbolTable.top.getItem(VarItem.START_KEY + assignStatement.getAssignedId().getName())).getType();
+                if (var_type instanceof FloatType && exp_type instanceof IntType){
+                    return new NoType();
+                }
+                else if (!(var_type.sameType(exp_type))){
+                    typeErrors.add(new UnsupportedOperandType(assignStatement.getLine(), assignStatement.toString()));
+                    return new NoType();
+                }
+            }
+            catch(ItemNotFound ignored){}
         }
         else{
             VarItem newVarItem = new VarItem(assignStatement.getAssignedId());
@@ -250,7 +268,18 @@ public class TypeChecker extends Visitor<Type> {
     @Override
     public Type visit(ListValue listValue){
         // TODO:visit listValue
-        return null;
+        ArrayList<Expression> elements = listValue.getElements();
+        if (elements.isEmpty()){
+            return new ListType(new NoType());
+        }
+        Type tmp = elements.getFirst().accept(this);
+        for (Expression el: elements){
+            if (!(tmp.sameType(el.accept(this)))){
+                typeErrors.add(new ListElementsTypesMisMatch(listValue.getLine()));
+                return new NoType();
+            }
+        }
+        return new ListType(tmp);
     }
     @Override
     public Type visit(FunctionPointer functionPointer){
@@ -273,10 +302,10 @@ public class TypeChecker extends Visitor<Type> {
         Type second_type = binaryExpression.getSecondOperand().accept(this);
 
         if (op == BinaryOperator.DIVIDE || op == BinaryOperator.PLUS || op == BinaryOperator.MINUS || op == BinaryOperator.MULT){
-            if (!(first_type instanceof IntType || first_type instanceof FloatType || first_type instanceof NoType)){
-                typeErrors.add(new UnsupportedOperandType(binaryExpression.getLine(), op.toString()));
-                return new NoType();
-            }
+//            if (!(first_type instanceof IntType || first_type instanceof FloatType || first_type instanceof NoType)){
+//                typeErrors.add(new UnsupportedOperandType(binaryExpression.getLine(), op.toString()));
+//                return new NoType();
+//            }
             if (first_type instanceof IntType){
                 if (second_type instanceof IntType || second_type instanceof NoType){
                     return new IntType();
@@ -298,7 +327,7 @@ public class TypeChecker extends Visitor<Type> {
                     return new NoType();
                 }
             }
-            else {
+            else if (first_type instanceof NoType){
                 if (second_type instanceof IntType) {
                     return new IntType();
                 } else if (second_type instanceof FloatType) {
@@ -308,6 +337,9 @@ public class TypeChecker extends Visitor<Type> {
                     typeErrors.add(new NonSameOperands(binaryExpression.getLine(), op));
                     return new NoType();
                 }
+            }
+            else{
+                typeErrors.add(new NonSameOperands(binaryExpression.getLine(), op));
             }
         }
         else if (op == BinaryOperator.EQUAL || op == BinaryOperator.NOT_EQUAL){
