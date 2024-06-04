@@ -61,7 +61,7 @@ public class TypeChecker extends Visitor<Type> {
         for(Statement statement : functionDeclaration.getBody()) {
             if (statement instanceof ReturnStatement) {
                 return_type = statement.accept(this);
-                continue;
+                break;
             }
             statement.accept(this);
         }
@@ -107,6 +107,19 @@ public class TypeChecker extends Visitor<Type> {
     public Type visit(AccessExpression accessExpression){
         if(accessExpression.isFunctionCall()){
             //TODO:function is called here.set the arguments type and visit its declaration
+            try{
+                FunctionItem func = (FunctionItem) SymbolTable.root.getItem(FunctionItem.START_KEY + ((Identifier)(accessExpression.getAccessedExpression())).getName());
+                ArrayList<Type> args = new ArrayList<>();
+                for(int i = 0; i < func.getFunctionDeclaration().getArgs().size(); i++){
+                    if(accessExpression.getArguments().size() >= i){
+                        if(func.getFunctionDeclaration().getArgs().get(i).getDefaultVal() != null)
+                            args.add(func.getFunctionDeclaration().getArgs().get(i).getDefaultVal().accept(this));
+                    }
+                    else args.add(accessExpression.getArguments().get(i).accept(this));
+                }
+                func.setArgumentTypes(args);
+                return func.getFunctionDeclaration().accept(this);
+            }catch (ItemNotFound ignored){}
         }
         else{
             Type accessedType = accessExpression.getAccessedExpression().accept(this);
@@ -115,6 +128,16 @@ public class TypeChecker extends Visitor<Type> {
                 return new NoType();
             }
             //TODO:index of access list must be int
+            for(Expression exp : accessExpression.getDimentionalAccess()){
+                if(!(exp.accept(this) instanceof IntType)){
+                    typeErrors.add(new IsNotIndexable(exp.getLine()));
+                    return new NoType();
+                }
+            }
+            if(accessedType instanceof StringType){
+                return new StringType();
+            }
+            return ((ListType) accessedType).getType();
         }
         return null;
     }
@@ -135,8 +158,8 @@ public class TypeChecker extends Visitor<Type> {
     @Override
     public Type visit(ForStatement forStatement){
         SymbolTable.push(SymbolTable.top.copy());
-        forStatement.getRangeExpression().accept(this);
         VarItem varItem = new VarItem(forStatement.getIteratorId());
+        varItem.setType(((ListType)(forStatement.getRangeExpression().accept(this))).getType());
         try{
             SymbolTable.top.put(varItem);
         }catch (ItemAlreadyExists ignored){}
@@ -425,7 +448,7 @@ public class TypeChecker extends Visitor<Type> {
     public Type visit(Identifier identifier){
         // TODO:visit Identifier
         try{
-            return ((VarItem) SymbolTable.root.getItem(VarItem.START_KEY + identifier.getName())).getType();
+            return ((VarItem) SymbolTable.top.getItem(VarItem.START_KEY + identifier.getName())).getType();
         }catch (ItemNotFound ignored){}
         return new NoType();
     }
