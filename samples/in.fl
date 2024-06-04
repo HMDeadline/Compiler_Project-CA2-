@@ -1,0 +1,79 @@
+
+
+
+def f(a, b, c)
+    if(a > 2)
+        return c + b;
+    else
+        return c - b;
+    end
+end
+
+
+
+def g(a, b, c, d, [e = 5.5])
+    if(d)
+        push(b, c);
+        return a + e;
+    else
+        push(b, "aRandomString");
+        return a / e;
+    end
+end
+
+
+def h(a, b)
+    return a*b;
+end
+
+
+def generate_list(a, b, c, d)
+
+    return [a ,b, c ,d];
+
+end
+
+
+
+def main()
+    f("computer", "science", 3);
+    a = 1.2;
+    index1 = 1;
+    index2 = 2;
+    b = ["hello", "I", "am", "here", "to", "test"];
+    d = g(a, b[index1 + index2], "CS", 5 == 6);
+    int1 = 1;
+    int2 = 2;
+    sum = h(int1, int2);
+    newVar = d + sum;
+    newList = generate_list("compiler", "type", "checker", "FunctionCraft");
+    for i in newList
+        sum + i;
+    end
+
+    for i in (1..10)
+        sum + i;
+    end
+
+    hopeFullyNotString = chop(4);
+    hopeFullyString = chop(b[2]);
+    push("computer", hopeFullyString);
+
+    for i in (b[1]..b[0])
+        sum + i;
+    end
+
+    for i in (5.5..b[2])
+        sum + i;
+    end
+
+
+
+    for i in (0..10)
+        b << i;
+    end
+
+    for i in (0..10)
+        b << newList[i] << newList[i+1];
+    end
+end
