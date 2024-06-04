@@ -358,48 +358,22 @@ public class TypeChecker extends Visitor<Type> {
 //                typeErrors.add(new UnsupportedOperandType(binaryExpression.getLine(), op.toString()));
 //                return new NoType();
 //            }
-            if (first_type instanceof IntType){
-                if (second_type instanceof IntType || second_type instanceof NoType){
-                    return new IntType();
-                }
-                else if (second_type instanceof FloatType){
-                    return new FloatType();
-                }
-                else{
-                    typeErrors.add(new NonSameOperands(binaryExpression.getLine(), op));
-                    return new NoType();
-                }
-            }
-            else if (first_type instanceof FloatType){
-                if (second_type instanceof IntType || second_type instanceof FloatType || second_type instanceof NoType){
-                    return new FloatType();
-                }
-                else{
-                    typeErrors.add(new NonSameOperands(binaryExpression.getLine(), op));
-                    return new NoType();
-                }
-            }
-            else if (first_type instanceof NoType){
-                if (second_type instanceof IntType) {
-                    return new IntType();
-                } else if (second_type instanceof FloatType) {
-                    return new FloatType();
+            if (first_type instanceof  IntType || first_type instanceof FloatType || first_type instanceof NoType){
+                if (first_type.sameType(second_type)){
+                    return second_type;
                 }
                 else {
                     typeErrors.add(new NonSameOperands(binaryExpression.getLine(), op));
                     return new NoType();
                 }
             }
-            else{
-                typeErrors.add(new NonSameOperands(binaryExpression.getLine(), op));
+            else {
+                typeErrors.add(new UnsupportedOperandType(binaryExpression.getLine(), op.toString()));
+                return new NoType();
             }
         }
         else if (op == BinaryOperator.EQUAL || op == BinaryOperator.NOT_EQUAL){
             if (first_type.sameType(second_type)){
-                return new BoolType();
-            }
-            if ((first_type instanceof IntType && second_type instanceof FloatType) ||
-                    (first_type instanceof FloatType && second_type instanceof IntType)){
                 return new BoolType();
             }
             else {
@@ -408,17 +382,11 @@ public class TypeChecker extends Visitor<Type> {
             }
         }
         else if (op == BinaryOperator.GREATER_EQUAL_THAN || op == BinaryOperator.GREATER_THAN || op == BinaryOperator.LESS_EQUAL_THAN || op == BinaryOperator.LESS_THAN){
-            if (first_type instanceof IntType || first_type instanceof FloatType){
-                if (second_type instanceof IntType || second_type instanceof FloatType){
-                    return new BoolType();
-                }
-                else{
-                    typeErrors.add(new NonSameOperands(binaryExpression.getLine(), op));
-                    return new NoType();
-                }
+            if (first_type.sameType(second_type)){
+                return new BoolType();
             }
-            else{
-                typeErrors.add(new UnsupportedOperandType(binaryExpression.getLine(), op.toString()));
+            else {
+                typeErrors.add(new NonSameOperands(binaryExpression.getLine(), op));
                 return new NoType();
             }
         }
