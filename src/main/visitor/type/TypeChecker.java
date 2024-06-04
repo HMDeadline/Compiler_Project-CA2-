@@ -61,7 +61,6 @@ public class TypeChecker extends Visitor<Type> {
         for(Statement statement : functionDeclaration.getBody()) {
             if (statement instanceof ReturnStatement) {
                 return_type = statement.accept(this);
-                break;
             }
             statement.accept(this);
         }
