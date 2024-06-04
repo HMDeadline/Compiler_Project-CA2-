@@ -481,7 +481,7 @@ public class TypeChecker extends Visitor<Type> {
             for(Expression exp : rangeExpression.getRangeExpressions()){
                 if(type.sameType(exp.accept(this))){
                     typeErrors.add((new ListElementsTypesMisMatch(rangeExpression.getLine())));
-                    return new NoType();
+                    return new ListType(new NoType());
                 }
             }
             return new ListType(type);
@@ -489,7 +489,7 @@ public class TypeChecker extends Visitor<Type> {
         else if(rangeType.equals(RangeType.DOUBLE_DOT)){
             if(!(rangeExpression.getRangeExpressions().getFirst().accept(this) instanceof IntType) || !(rangeExpression.getRangeExpressions().getLast().accept(this) instanceof IntType)){
                 typeErrors.add(new RangeValuesMisMatch(rangeExpression.getLine()));
-                return new NoType();
+                return new ListType(new NoType());
             }
             return new ListType(new IntType());
         }
@@ -498,7 +498,7 @@ public class TypeChecker extends Visitor<Type> {
                return rangeExpression.getRangeExpressions().getFirst().accept(this);
             }
             typeErrors.add(new IsNotIterable(rangeExpression.getLine()));
-            return new NoType();
+            return new ListType(new NoType());
         }
         return null;
     }
