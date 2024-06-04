@@ -157,9 +157,12 @@ public class TypeChecker extends Visitor<Type> {
     }
     @Override
     public Type visit(ForStatement forStatement){
+        Type type = ((ListType)(forStatement.getRangeExpression().accept(this))).getType();
+        if(type instanceof NoType)
+            return null;
         SymbolTable.push(SymbolTable.top.copy());
         VarItem varItem = new VarItem(forStatement.getIteratorId());
-        varItem.setType(((ListType)(forStatement.getRangeExpression().accept(this))).getType());
+        varItem.setType(type);
         try{
             SymbolTable.top.put(varItem);
         }catch (ItemAlreadyExists ignored){}
