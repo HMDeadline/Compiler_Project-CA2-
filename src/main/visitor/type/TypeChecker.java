@@ -122,7 +122,7 @@ public class TypeChecker extends Visitor<Type> {
     @Override
     public Type visit(ReturnStatement returnStatement){
         //TODO:Visit return statement.Note that return type of functions are specified here
-        if(!returnStatement.hasRetExpression()) {
+        if(returnStatement.hasRetExpression()){
             return returnStatement.getReturnExp().accept(this);
         }
         return new NoType();
@@ -390,18 +390,18 @@ public class TypeChecker extends Visitor<Type> {
         UnaryOperator op = unaryExpression.getOperator();
         Type type = unaryExpression.getExpression().accept(this);
         if(op == UnaryOperator.NOT){
-            if(!(type instanceof BoolType)){
+            if(!(type instanceof BoolType) && !(type instanceof NoType)){
                 typeErrors.add(new UnsupportedOperandType(unaryExpression.getLine(), op.toString()));
                 return new NoType();
             }
-            return new BoolType();
+            return (type instanceof BoolType) ? new BoolType() : new NoType();
         }
         else if(op == UnaryOperator.DEC || op == UnaryOperator.INC || op == UnaryOperator.MINUS){
-            if(!(type instanceof IntType) && !(type instanceof FloatType)){
+            if(!(type instanceof IntType) && !(type instanceof FloatType) && !(type instanceof NoType)){
                 typeErrors.add(new UnsupportedOperandType(unaryExpression.getLine(), op.toString()));
                 return new NoType();
             }
-            return (type instanceof IntType) ? new IntType() : new FloatType();
+            return (type instanceof IntType) ? new IntType() : (type instanceof FloatType) ? new FloatType() : new NoType();
         }
         return null;
     }
