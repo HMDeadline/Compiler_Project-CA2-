@@ -111,7 +111,7 @@ public class TypeChecker extends Visitor<Type> {
                 FunctionItem func = (FunctionItem) SymbolTable.root.getItem(FunctionItem.START_KEY + ((Identifier)(accessExpression.getAccessedExpression())).getName());
                 ArrayList<Type> args = new ArrayList<>();
                 for(int i = 0; i < func.getFunctionDeclaration().getArgs().size(); i++){
-                    if(accessExpression.getArguments().size() >= i){
+                    if(accessExpression.getArguments().size() <= i){
                         if(func.getFunctionDeclaration().getArgs().get(i).getDefaultVal() != null)
                             args.add(func.getFunctionDeclaration().getArgs().get(i).getDefaultVal().accept(this));
                     }
@@ -279,9 +279,7 @@ public class TypeChecker extends Visitor<Type> {
     @Override
     public Type visit(PutStatement putStatement){
         //TODO:visit putStatement
-        if(!(putStatement.getExpression().accept(this) instanceof StringType) && !(putStatement.getExpression().accept(this) instanceof ListType)){
-            typeErrors.add(new IsNotPrintable(putStatement.getLine()));
-        }
+        putStatement.getExpression().accept(this);
         return new NoType();
 
     }
@@ -323,11 +321,27 @@ public class TypeChecker extends Visitor<Type> {
     @Override
     public Type visit(AppendExpression appendExpression){
         Type appendeeType = appendExpression.getAppendee().accept(this);
-        if(!(appendeeType instanceof ListType) && !(appendeeType instanceof StringType)){
+        if(appendeeType instanceof StringType){
+            for (Expression exp : appendExpression.getAppendeds()){
+                if (!(exp.accept(this) instanceof StringType)){
+                    typeErrors.add(new AppendTypesMisMatch(appendExpression.getLine()));
+                    return new NoType();
+                }
+            }
+        }
+        else if(appendeeType instanceof ListType){
+            for (Expression exp : appendExpression.getAppendeds()){
+                if (!(exp.accept(this).sameType(((ListType) appendeeType).getType()))){
+                    typeErrors.add(new AppendTypesMisMatch(appendExpression.getLine()));
+                    return new NoType();
+                }
+            }
+        }
+        else{
             typeErrors.add(new IsNotAppendable(appendExpression.getLine()));
             return new NoType();
         }
-        return (appendeeType instanceof ListType) ? new ListType(appendeeType) : new StringType();
+        return (appendeeType instanceof StringType) ? new StringType() : new ListType(((ListType) appendeeType).getType());
     }
     @Override
     public Type visit(BinaryExpression binaryExpression){
